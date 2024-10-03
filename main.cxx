@@ -12,7 +12,8 @@ int main(int argc, char** argv) {
     // :1: root file path
     // :2: task tag, like stat or sys
     // :3: centrality
-    // :4: mode, 0 for rapidity scan and 1 for pT scan
+    // :4: mode, 0 for rapidity scan, 1 for pT scan, 2 for shifting rapidity scan
+    // :5: highest order
 
     // note, please name the files list:
     // -> path/stat.y0p5.root 
@@ -27,8 +28,13 @@ int main(int argc, char** argv) {
     std::cout << "[LOG] Centrality: " << cent << std::endl;
     if (mode == 1) {
         std::cout << "[LOG] Mode: pT" << std::endl;
+    } else if (mode == 0) {
+        std::cout << "[LOG] Mode: accumulative y" << std::endl;
+    } else if (mode == 2) {
+        std::cout << "[LOG] Mode: differential y" << std::endl;
     } else {
-        std::cout << "[LOG] Mode: y" << std::endl;
+        std::cout << "[ERROR] Invalid mode (" << mode << ")" << std::endl;
+        return -1;
     }
 
     std::vector<std::string> files;
@@ -43,19 +49,46 @@ int main(int argc, char** argv) {
     double xerr[nCums][nfs] = { 0.0 };
     double yerr[nCums][nfs] = { 0.0 };
 
-    std::vector<std::string> cumTags = {
-        "Pro_C1", "Pro_C2", "Pro_C3", "Pro_C4", "Pro_C5", "Pro_C6", // 6
-        "Pro_R21", "Pro_R31", "Pro_R32", "Pro_R42", "Pro_R51", "Pro_R62", // 6
-        "Pro_k1", "Pro_k2", "Pro_k3", "Pro_k4", "Pro_k5", "Pro_k6", // 6
-        "Pro_k21", "Pro_k31", "Pro_k41", "Pro_k51", "Pro_k61", // 5
-        "Pbar_C1", "Pbar_C2", "Pbar_C3", "Pbar_C4", "Pbar_C5", "Pbar_C6", // 6
-        "Pbar_R21", "Pbar_R31", "Pbar_R32", "Pbar_R42", "Pbar_R51", "Pbar_R62", // 6
-        "Pbar_k1", "Pbar_k2", "Pbar_k3", "Pbar_k4", "Pbar_k5", "Pbar_k6", // 6
-        "Pbar_k21", "Pbar_k31", "Pbar_k41", "Pbar_k51", "Pbar_k61", // 5
-        "Netp_C1", "Netp_ppb", "Netp_C2", "Netp_C3", "Netp_C4", "Netp_C5", "Netp_C6", // 7
-        "Netp_R21", "Netp_R2s", "Netp_R31", "Netp_R32", "Netp_R3s", // 5
-        "Netp_R42", "Netp_R51", "Netp_R62" // 3
-    };
+    std::vector<std::string> cumTags;
+    
+    double hOrder = TString(argv[5]).Atoi();
+    if (hOrder == 4) {
+        std::cout << "[LOG] In the scan, up to 4th order will be considered." << std::endl;
+    } else if (hOrder == 6) {
+        std::cout << "[LOG] In the scan, up to 6th order will be considered." << std::endl;
+    } else {
+        std::cout << "[ERROR] Invalid highest order (" << argv[5] << ")" << std::endl;
+        return -1;
+    }
+
+    if (hOrder == 6) {
+        cumTags = std::vector<std::string>({
+            "Pro_C1", "Pro_C2", "Pro_C3", "Pro_C4", "Pro_C5", "Pro_C6", // 6
+            "Pro_R21", "Pro_R31", "Pro_R32", "Pro_R42", "Pro_R51", "Pro_R62", // 6
+            "Pro_k1", "Pro_k2", "Pro_k3", "Pro_k4", "Pro_k5", "Pro_k6", // 6
+            "Pro_k21", "Pro_k31", "Pro_k41", "Pro_k51", "Pro_k61", // 5
+            "Pbar_C1", "Pbar_C2", "Pbar_C3", "Pbar_C4", "Pbar_C5", "Pbar_C6", // 6
+            "Pbar_R21", "Pbar_R31", "Pbar_R32", "Pbar_R42", "Pbar_R51", "Pbar_R62", // 6
+            "Pbar_k1", "Pbar_k2", "Pbar_k3", "Pbar_k4", "Pbar_k5", "Pbar_k6", // 6
+            "Pbar_k21", "Pbar_k31", "Pbar_k41", "Pbar_k51", "Pbar_k61", // 5
+            "Netp_C1", "Netp_ppb", "Netp_C2", "Netp_C3", "Netp_C4", "Netp_C5", "Netp_C6", // 7
+            "Netp_R21", "Netp_R2s", "Netp_R31", "Netp_R32", "Netp_R3s", // 5
+            "Netp_R42", "Netp_R51", "Netp_R62" // 3
+        });
+    } else {
+        cumTags = std::vector<std::string>({
+            "Pro_C1", "Pro_C2", "Pro_C3", "Pro_C4", // 4
+            "Pro_R21", "Pro_R31", "Pro_R32", "Pro_R42", // 4
+            "Pro_k1", "Pro_k2", "Pro_k3", "Pro_k4",  // 4
+            "Pro_k21", "Pro_k31", "Pro_k41", // 3
+            "Pbar_C1", "Pbar_C2", "Pbar_C3", "Pbar_C4", // 4
+            "Pbar_R21", "Pbar_R31", "Pbar_R32", "Pbar_R42", // 4
+            "Pbar_k1", "Pbar_k2", "Pbar_k3", "Pbar_k4", // 4
+            "Pbar_k21", "Pbar_k31", "Pbar_k41", // 3
+            "Netp_C1", "Netp_ppb", "Netp_C2", "Netp_C3", "Netp_C4", // 5
+            "Netp_R21", "Netp_R2s", "Netp_R31", "Netp_R32", "Netp_R3s", "Netp_R42" // 6
+        });
+    }
 
     if (mode == 0) { // rapidity mode
         files = std::vector<std::string>(
@@ -94,7 +127,7 @@ int main(int argc, char** argv) {
             iCum ++;
         };
         tfout->Close();
-        std::cout << "[LOG] Rapidity scan finished!" << std::endl;
+        std::cout << "[LOG] Accumulative rapidity scan finished!" << std::endl;
     } else if (mode == 1) { // pT scan
         files = std::vector<std::string>(
             {"pt0p8", "pt1p0", "pt1p2", "pt1p4", "pt1p6", "pt1p8", "y0p5"}
@@ -134,6 +167,44 @@ int main(int argc, char** argv) {
         tfout->Close();
         std::cout << "[LOG] pT scan finished!" << std::endl;
 
+    } else if (mode == 2) { // differential rapidity scan
+        files = std::vector<std::string>(
+            {"y0p1", "yf0p2", "yf0p3", "yf0p4", "yf0p5", "yf0p6"}
+        );
+        nFiles = 6;
+        double xarr[6] = { 0.05, 0.15, 0.25, 0.35, 0.45, 0.55 };
+
+        int iFile = 0;
+        for (auto iter : files) {
+            tfs[iFile] = new TFile(
+                Form(
+                    "%s/%s.%s.root", 
+                    path, tag, iter.c_str()
+                )
+            );
+            int iCum = 0;
+            for (auto iterc : cumTags) {
+                auto tg = (TGraphErrors*)tfs[iFile]->Get(iterc.c_str());
+                x[iCum][iFile] = xarr[iFile];
+                xerr[iCum][iFile] = 0.0;
+                y[iCum][iFile] = tg->GetPointY(cent);
+                yerr[iCum][iFile] = tg->GetErrorY(cent);
+                iCum ++;
+            }
+            iFile ++;
+        }
+
+        TFile* tfout = new TFile(Form("outputs/%s.cent%d.yf.root", tag, cent), "recreate");
+        tfout->cd();
+        int iCum = 0;
+        for (auto iterc : cumTags) {
+            tgs[iCum] = new TGraphErrors(nFiles, x[iCum], y[iCum], xerr[iCum], yerr[iCum]);
+            tgs[iCum]->SetName(iterc.c_str());
+            tgs[iCum]->Write();
+            iCum ++;
+        };
+        tfout->Close();
+        std::cout << "[LOG] Differential rapidity scan finished!" << std::endl;
     }
 
     return 0;
