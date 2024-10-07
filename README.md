@@ -2,9 +2,9 @@
 
 author: yghuang
 
-version: 1.1
+version: 2.0
 
-date: 03.10.2024
+date: 08.10.2024
 
 ## Quick Guid
 
@@ -14,15 +14,18 @@ date: 03.10.2024
     * For example, `inputs/stat.y0p5.root`
 
 2. Compile the executable with `make`
+    * If you are using a new version `CumulantCalculation` package (>7.0), activate `ALTER=1` to include all kinds of ratios (from both method1 and method2)
 
-3. Run `./scan path tag cent mode order`
+3. Run `./scan path tag cent mode scan order`
     * `path` can be `inputs` if you are following my step
 
     * `tag` can be `stat` or `sys` or any other tags you like, but make sure the file name formatting follows `path/tag.scanTag.root`
 
     * `cent` can be `0` to `8`, for most central to peripheral
 
-    * `mode` can be `0` for rapidity scan and `1` for pT scan
+    * `mode` can be `y`/`rap`/`rapidity` for rapidity scan and `pt`/`pT` for pT scan
+
+    * `scan` can be `0` for accumulative scan and `1` for differential scan
 
     * `order` can be `4` or `6`, indicating the highest order of cumulants
 
@@ -30,10 +33,15 @@ date: 03.10.2024
 
 ## Patch Note
 
+08.10.2024 by yghuang (v2.0):
+
+1. The arglist is changed: `./scan path tag cent mode scan order`, for details see the guide
+
+2. The CBWC methods for ratios are changed, define `ALTER=1` to activate
+
 03.10.2024 by yghuang (v1.1):
 
 > Add differential rapidity scan (use mode code: 2)
-
 > Add one more argument `order`
 
 02.07.2024 by yghuang (v1.0):
