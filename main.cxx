@@ -12,8 +12,9 @@ int main(int argc, char** argv) {
     // :1: root file path
     // :2: task tag, like stat or sys
     // :3: centrality
-    // :4: mode, 0 for rapidity scan, 1 for pT scan, 2 for shifting rapidity scan
-    // :5: highest order
+    // :4: var mode, [rap] [y] [rapidity] or [pt] [pT]
+    // :5: scan mode, 0 for traditional (accumulative), 1 for shifting (differential)
+    // :6: highest order, 4 or 6
 
     // note, please name the files list:
     // -> path/stat.y0p5.root 
@@ -21,19 +22,30 @@ int main(int argc, char** argv) {
     const char* path = argv[1];
     const char* tag = argv[2];
     int cent = TString(argv[3]).Atoi();
-    int mode = TString(argv[4]).Atoi();
+    std::string modeStr(argv[4]);
+    int mode;
+    int scan = TString(argv[5]).Atoi();
 
     std::cout << "[LOG] Path: " << path << std::endl;
     std::cout << "[LOG] Task tag: " << tag << std::endl;
     std::cout << "[LOG] Centrality: " << cent << std::endl;
-    if (mode == 1) {
+    if (modeStr == "rap" || modeStr == "y" || modeStr == "rapidity") { mode = 0; }
+    else if (modeStr == "pT" || modeStr == "pt") { mode = 1; }
+    else { mode = -1; }
+    if (mode == 0) {
         std::cout << "[LOG] Mode: pT" << std::endl;
-    } else if (mode == 0) {
-        std::cout << "[LOG] Mode: accumulative y" << std::endl;
-    } else if (mode == 2) {
-        std::cout << "[LOG] Mode: differential y" << std::endl;
+    } else if (mode == 1) {
+        std::cout << "[LOG] Mode: y" << std::endl;
     } else {
-        std::cout << "[ERROR] Invalid mode (" << mode << ")" << std::endl;
+        std::cout << "[ERROR] Invalid mode code (" << modeStr << ")" << std::endl;
+        return -1;
+    }
+    if (scan == 0) {
+        std::cout << "[LOG] Accumulative scan" << std::endl;
+    } else if (scan == 1) {
+        std::cout << "[LOG] Differential scan" << std::endl;
+    } else {
+        std::cout << "[ERROR] Invalid scan code (" << scan << ")" << std::endl;
         return -1;
     }
 
@@ -51,13 +63,13 @@ int main(int argc, char** argv) {
 
     std::vector<std::string> cumTags;
     
-    double hOrder = TString(argv[5]).Atoi();
+    double hOrder = TString(argv[6]).Atoi();
     if (hOrder == 4) {
         std::cout << "[LOG] In the scan, up to 4th order will be considered." << std::endl;
     } else if (hOrder == 6) {
         std::cout << "[LOG] In the scan, up to 6th order will be considered." << std::endl;
     } else {
-        std::cout << "[ERROR] Invalid highest order (" << argv[5] << ")" << std::endl;
+        std::cout << "[ERROR] Invalid highest order (" << argv[6] << ")" << std::endl;
         return -1;
     }
 
@@ -73,7 +85,16 @@ int main(int argc, char** argv) {
             "Pbar_k21", "Pbar_k31", "Pbar_k41", "Pbar_k51", "Pbar_k61", // 5
             "Netp_C1", "Netp_ppb", "Netp_C2", "Netp_C3", "Netp_C4", "Netp_C5", "Netp_C6", // 7
             "Netp_R21", "Netp_R2s", "Netp_R31", "Netp_R32", "Netp_R3s", // 5
-            "Netp_R42", "Netp_R51", "Netp_R62" // 3
+            "Netp_R42", "Netp_R51", "Netp_R62", // 3,
+            #ifdef __CBWCALTER__
+            // some more, with CBWC method2
+            "Pro_R21r", "Pro_R31r", "Pro_R32r", "Pro_R42r", "Pro_R51r", "Pro_R62r", // 6
+            "Pro_k21r", "Pro_k31r", "Pro_k41r", "Pro_k51r", "Pro_k61r", // 5
+            "Pbar_R21r", "Pbar_R31r", "Pbar_R32r", "Pbar_R42r", "Pbar_R51r", "Pbar_R62r", // 6
+            "Pbar_k21r", "Pbar_k31r", "Pbar_k41r", "Pbar_k51r", "Pbar_k61r", // 5
+            "Netp_R21r", "Netp_R2sr", "Netp_R31r", "Netp_R32r", "Netp_R3sr", // 5
+            "Netp_R42r", "Netp_R51r", "Netp_R62r" // 3
+            #endif
         });
     } else {
         cumTags = std::vector<std::string>({
@@ -86,11 +107,19 @@ int main(int argc, char** argv) {
             "Pbar_k1", "Pbar_k2", "Pbar_k3", "Pbar_k4", // 4
             "Pbar_k21", "Pbar_k31", "Pbar_k41", // 3
             "Netp_C1", "Netp_ppb", "Netp_C2", "Netp_C3", "Netp_C4", // 5
-            "Netp_R21", "Netp_R2s", "Netp_R31", "Netp_R32", "Netp_R3s", "Netp_R42" // 6
+            "Netp_R21", "Netp_R2s", "Netp_R31", "Netp_R32", "Netp_R3s", "Netp_R42", // 6
+            #ifdef __CBWCALTER__
+            // some more, with CBWC method2
+            "Pro_R21r", "Pro_R31r", "Pro_R32r", "Pro_R42r", // 4
+            "Pro_k21r", "Pro_k31r", "Pro_k41r", // 3
+            "Pbar_R21r", "Pbar_R31r", "Pbar_R32r", "Pbar_R42r", // 4
+            "Pbar_k21r", "Pbar_k31r", "Pbar_k41r", // 3
+            "Netp_R21r", "Netp_R2sr", "Netp_R31r", "Netp_R32r", "Netp_R3sr", "Netp_R42r" // 6
+            #endif
         });
     }
 
-    if (mode == 0) { // rapidity mode
+    if (mode == 0 && scan == 0) { // rapidity + accumulative
         files = std::vector<std::string>(
             {"y0p1", "y0p2", "y0p3", "y0p4", "y0p5", "y0p6"}
         );
@@ -128,7 +157,7 @@ int main(int argc, char** argv) {
         };
         tfout->Close();
         std::cout << "[LOG] Accumulative rapidity scan finished!" << std::endl;
-    } else if (mode == 1) { // pT scan
+    } else if (mode == 1 && scan == 0) { // pT + accumulative
         files = std::vector<std::string>(
             {"pt0p8", "pt1p0", "pt1p2", "pt1p4", "pt1p6", "pt1p8", "y0p5"}
         );
@@ -167,7 +196,7 @@ int main(int argc, char** argv) {
         tfout->Close();
         std::cout << "[LOG] pT scan finished!" << std::endl;
 
-    } else if (mode == 2) { // differential rapidity scan
+    } else if (mode == 0 && scan == 1) { // rapidity differential
         files = std::vector<std::string>(
             {"y0p1", "yf0p2", "yf0p3", "yf0p4", "yf0p5", "yf0p6"}
         );
@@ -195,6 +224,79 @@ int main(int argc, char** argv) {
         }
 
         TFile* tfout = new TFile(Form("outputs/%s.cent%d.yf.root", tag, cent), "recreate");
+        tfout->cd();
+        int iCum = 0;
+        for (auto iterc : cumTags) {
+            tgs[iCum] = new TGraphErrors(nFiles, x[iCum], y[iCum], xerr[iCum], yerr[iCum]);
+            tgs[iCum]->SetName(iterc.c_str());
+            tgs[iCum]->Write();
+        }
+    } else if (mode == 0 && scan == 1) { // rapidity differential
+        files = std::vector<std::string>(
+            {"y0p1", "yf0p2", "yf0p3", "yf0p4", "yf0p5", "yf0p6"}
+        );
+        nFiles = 6;
+        double xarr[6] = { 0.05, 0.15, 0.25, 0.35, 0.45, 0.55 };
+
+        int iFile = 0;
+        for (auto iter : files) {
+            tfs[iFile] = new TFile(
+                Form(
+                    "%s/%s.%s.root", 
+                    path, tag, iter.c_str()
+                )
+            );
+            int iCum = 0;
+            for (auto iterc : cumTags) {
+                auto tg = (TGraphErrors*)tfs[iFile]->Get(iterc.c_str());
+                x[iCum][iFile] = xarr[iFile];
+                xerr[iCum][iFile] = 0.0;
+                y[iCum][iFile] = tg->GetPointY(cent);
+                yerr[iCum][iFile] = tg->GetErrorY(cent);
+                iCum ++;
+            }
+            iFile ++;
+        }
+
+        TFile* tfout = new TFile(Form("outputs/%s.cent%d.yf.root", tag, cent), "recreate");
+        tfout->cd();
+        int iCum = 0;
+        for (auto iterc : cumTags) {
+            tgs[iCum] = new TGraphErrors(nFiles, x[iCum], y[iCum], xerr[iCum], yerr[iCum]);
+            tgs[iCum]->SetName(iterc.c_str());
+            tgs[iCum]->Write();
+            iCum ++;
+        };
+        tfout->Close();
+        std::cout << "[LOG] Differential rapidity scan finished!" << std::endl;
+    } else if (mode == 0 && scan == 1) { // pT differential
+        files = std::vector<std::string>(
+            {"ptf0p6", "ptf0p8", "ptf1p0", "ptf1p2", "ptf1p4", "ptf1p6", "ptf1p8", "ptf2p0"}
+        );
+        nFiles = 8;
+        double xarr[8] = { 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 1.7, 1.9 };
+
+        int iFile = 0;
+        for (auto iter : files) {
+            tfs[iFile] = new TFile(
+                Form(
+                    "%s/%s.%s.root", 
+                    path, tag, iter.c_str()
+                )
+            );
+            int iCum = 0;
+            for (auto iterc : cumTags) {
+                auto tg = (TGraphErrors*)tfs[iFile]->Get(iterc.c_str());
+                x[iCum][iFile] = xarr[iFile];
+                xerr[iCum][iFile] = 0.0;
+                y[iCum][iFile] = tg->GetPointY(cent);
+                yerr[iCum][iFile] = tg->GetErrorY(cent);
+                iCum ++;
+            }
+            iFile ++;
+        }
+
+        TFile* tfout = new TFile(Form("outputs/%s.cent%d.ptf.root", tag, cent), "recreate");
         tfout->cd();
         int iCum = 0;
         for (auto iterc : cumTags) {
