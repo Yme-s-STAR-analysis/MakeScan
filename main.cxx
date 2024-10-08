@@ -33,9 +33,9 @@ int main(int argc, char** argv) {
     else if (modeStr == "pT" || modeStr == "pt") { mode = 1; }
     else { mode = -1; }
     if (mode == 0) {
-        std::cout << "[LOG] Mode: pT" << std::endl;
-    } else if (mode == 1) {
         std::cout << "[LOG] Mode: y" << std::endl;
+    } else if (mode == 1) {
+        std::cout << "[LOG] Mode: pT" << std::endl;
     } else {
         std::cout << "[ERROR] Invalid mode code (" << modeStr << ")" << std::endl;
         return -1;
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 
     const int nfs = 10;
     int nFiles;
-    const int nCums = 61;
+    const int nCums = 100;
     TFile* tfs[nfs];
     TGraphErrors* tgs[nCums];
     double x[nCums][nfs] = { 0.0 };
@@ -85,10 +85,10 @@ int main(int argc, char** argv) {
             "Pbar_k21", "Pbar_k31", "Pbar_k41", "Pbar_k51", "Pbar_k61", // 5
             "Netp_C1", "Netp_ppb", "Netp_C2", "Netp_C3", "Netp_C4", "Netp_C5", "Netp_C6", // 7
             "Netp_R21", "Netp_R2s", "Netp_R31", "Netp_R32", "Netp_R3s", // 5
-            "Netp_R42", "Netp_R51", "Netp_R62", // 3,
+            "Netp_R42", "Netp_R51", "Netp_R62" // 3,
             #ifdef __CBWCALTER__
             // some more, with CBWC method2
-            "Pro_R21r", "Pro_R31r", "Pro_R32r", "Pro_R42r", "Pro_R51r", "Pro_R62r", // 6
+            ,"Pro_R21r", "Pro_R31r", "Pro_R32r", "Pro_R42r", "Pro_R51r", "Pro_R62r", // 6
             "Pro_k21r", "Pro_k31r", "Pro_k41r", "Pro_k51r", "Pro_k61r", // 5
             "Pbar_R21r", "Pbar_R31r", "Pbar_R32r", "Pbar_R42r", "Pbar_R51r", "Pbar_R62r", // 6
             "Pbar_k21r", "Pbar_k31r", "Pbar_k41r", "Pbar_k51r", "Pbar_k61r", // 5
@@ -107,10 +107,10 @@ int main(int argc, char** argv) {
             "Pbar_k1", "Pbar_k2", "Pbar_k3", "Pbar_k4", // 4
             "Pbar_k21", "Pbar_k31", "Pbar_k41", // 3
             "Netp_C1", "Netp_ppb", "Netp_C2", "Netp_C3", "Netp_C4", // 5
-            "Netp_R21", "Netp_R2s", "Netp_R31", "Netp_R32", "Netp_R3s", "Netp_R42", // 6
+            "Netp_R21", "Netp_R2s", "Netp_R31", "Netp_R32", "Netp_R3s", "Netp_R42" // 6
             #ifdef __CBWCALTER__
             // some more, with CBWC method2
-            "Pro_R21r", "Pro_R31r", "Pro_R32r", "Pro_R42r", // 4
+            ,"Pro_R21r", "Pro_R31r", "Pro_R32r", "Pro_R42r", // 4
             "Pro_k21r", "Pro_k31r", "Pro_k41r", // 3
             "Pbar_R21r", "Pbar_R31r", "Pbar_R32r", "Pbar_R42r", // 4
             "Pbar_k21r", "Pbar_k31r", "Pbar_k41r", // 3
@@ -139,8 +139,8 @@ int main(int argc, char** argv) {
                 auto tg = (TGraphErrors*)tfs[iFile]->Get(iterc.c_str());
                 x[iCum][iFile] = xarr[iFile];
                 xerr[iCum][iFile] = 0.0;
-                y[iCum][iFile] = tg->GetPointY(cent);
-                yerr[iCum][iFile] = tg->GetErrorY(cent);
+                y[iCum][iFile] = double(tg->GetPointY(cent));
+                yerr[iCum][iFile] = double(tg->GetErrorY(cent));
                 iCum ++;
             }
             iFile ++;
@@ -157,6 +157,7 @@ int main(int argc, char** argv) {
         };
         tfout->Close();
         std::cout << "[LOG] Accumulative rapidity scan finished!" << std::endl;
+
     } else if (mode == 1 && scan == 0) { // pT + accumulative
         files = std::vector<std::string>(
             {"pt0p8", "pt1p0", "pt1p2", "pt1p4", "pt1p6", "pt1p8", "y0p5"}
@@ -177,8 +178,8 @@ int main(int argc, char** argv) {
                 auto tg = (TGraphErrors*)tfs[iFile]->Get(iterc.c_str());
                 x[iCum][iFile] = xarr[iFile];
                 xerr[iCum][iFile] = 0.0;
-                y[iCum][iFile] = tg->GetPointY(cent);
-                yerr[iCum][iFile] = tg->GetErrorY(cent);
+                y[iCum][iFile] = double(tg->GetPointY(cent));
+                yerr[iCum][iFile] = double(tg->GetErrorY(cent));
                 iCum ++;
             }
             iFile ++;
@@ -194,7 +195,7 @@ int main(int argc, char** argv) {
             iCum ++;
         };
         tfout->Close();
-        std::cout << "[LOG] pT scan finished!" << std::endl;
+        std::cout << "[LOG] Accumulative pT scan finished!" << std::endl;
 
     } else if (mode == 0 && scan == 1) { // rapidity differential
         files = std::vector<std::string>(
@@ -216,43 +217,8 @@ int main(int argc, char** argv) {
                 auto tg = (TGraphErrors*)tfs[iFile]->Get(iterc.c_str());
                 x[iCum][iFile] = xarr[iFile];
                 xerr[iCum][iFile] = 0.0;
-                y[iCum][iFile] = tg->GetPointY(cent);
-                yerr[iCum][iFile] = tg->GetErrorY(cent);
-                iCum ++;
-            }
-            iFile ++;
-        }
-
-        TFile* tfout = new TFile(Form("outputs/%s.cent%d.yf.root", tag, cent), "recreate");
-        tfout->cd();
-        int iCum = 0;
-        for (auto iterc : cumTags) {
-            tgs[iCum] = new TGraphErrors(nFiles, x[iCum], y[iCum], xerr[iCum], yerr[iCum]);
-            tgs[iCum]->SetName(iterc.c_str());
-            tgs[iCum]->Write();
-        }
-    } else if (mode == 0 && scan == 1) { // rapidity differential
-        files = std::vector<std::string>(
-            {"y0p1", "yf0p2", "yf0p3", "yf0p4", "yf0p5", "yf0p6"}
-        );
-        nFiles = 6;
-        double xarr[6] = { 0.05, 0.15, 0.25, 0.35, 0.45, 0.55 };
-
-        int iFile = 0;
-        for (auto iter : files) {
-            tfs[iFile] = new TFile(
-                Form(
-                    "%s/%s.%s.root", 
-                    path, tag, iter.c_str()
-                )
-            );
-            int iCum = 0;
-            for (auto iterc : cumTags) {
-                auto tg = (TGraphErrors*)tfs[iFile]->Get(iterc.c_str());
-                x[iCum][iFile] = xarr[iFile];
-                xerr[iCum][iFile] = 0.0;
-                y[iCum][iFile] = tg->GetPointY(cent);
-                yerr[iCum][iFile] = tg->GetErrorY(cent);
+                y[iCum][iFile] = double(tg->GetPointY(cent));
+                yerr[iCum][iFile] = double(tg->GetErrorY(cent));
                 iCum ++;
             }
             iFile ++;
@@ -269,7 +235,8 @@ int main(int argc, char** argv) {
         };
         tfout->Close();
         std::cout << "[LOG] Differential rapidity scan finished!" << std::endl;
-    } else if (mode == 0 && scan == 1) { // pT differential
+
+    } else if (mode == 1 && scan == 1) { // pT differential
         files = std::vector<std::string>(
             {"ptf0p6", "ptf0p8", "ptf1p0", "ptf1p2", "ptf1p4", "ptf1p6", "ptf1p8", "ptf2p0"}
         );
@@ -289,8 +256,8 @@ int main(int argc, char** argv) {
                 auto tg = (TGraphErrors*)tfs[iFile]->Get(iterc.c_str());
                 x[iCum][iFile] = xarr[iFile];
                 xerr[iCum][iFile] = 0.0;
-                y[iCum][iFile] = tg->GetPointY(cent);
-                yerr[iCum][iFile] = tg->GetErrorY(cent);
+                y[iCum][iFile] = double(tg->GetPointY(cent));
+                yerr[iCum][iFile] = double(tg->GetErrorY(cent));
                 iCum ++;
             }
             iFile ++;
@@ -306,7 +273,7 @@ int main(int argc, char** argv) {
             iCum ++;
         };
         tfout->Close();
-        std::cout << "[LOG] Differential rapidity scan finished!" << std::endl;
+        std::cout << "[LOG] Differential pT scan finished!" << std::endl;
     }
 
     return 0;
